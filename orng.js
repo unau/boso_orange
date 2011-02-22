@@ -36,14 +36,32 @@ function form_board(tbody) {
   tbody.trs = new Array();
   tbody.journey = {
     a: new Array(),
-    unshift: function(cell) {
-      this.a.unshift(cell);
+    unshift: function(cid) {
+      this.a.unshift(cid);
     },
     clear: function() {
       this.a = new Array();
     },
     shift: function() {
       return this.a.shift();
+    },
+    in: function(cid) {
+      var i;
+      for (i in this.a) {
+        if (this.a[i] == cid) {
+          return true;
+        }
+      }
+      return false;
+    },
+    remove: function(cid) {
+      boso_step_undo(true); // cancel
+      var current_cid = this.a.shift();
+      while (current_cid != cid) {
+        boso_step_undo(true); // cancel
+        current_cid = this.a.shift();
+      }
+      return true;
     }
   };
   tbody.createCellLineTr = function() {
@@ -181,7 +199,7 @@ function peso() {
   }
   board.addWallLine(max_length + 2);
   for (i in lines) {
-    line = lines[i];
+    var line = lines[i];
     tr = board.createCellLineTr();
     tr.addWall();
     var chs = line.split('');
@@ -252,12 +270,13 @@ function boso_move(direction, trace) {
   else {
     char2 = char_wall;
   }
-  var remove_flag = null;
   var patch = new Array();
   if (boso_is_space(char1)) {
-    // if (journey_list)
-    if (remove_flag == null) {
-      board.journey.unshift(cell0);
+    if (board.journey.in(cid1)) {
+      board.journey.remove(cid1);
+    }
+    else {
+      board.journey.unshift(cid0);
       patch.push(boso_diff(cell0, char_mark, char_space),
                  boso_diff(cell1, char_space, char_mark));
     }
@@ -278,7 +297,7 @@ function boso_move(direction, trace) {
       cell0.setChar(char_mark);
     }
   }
-  if (patch) {
+  if (patch && patch.length > 0) {
     // boso_update_step();
     board.patch(patch);
     board.diff_history.append(patch);
@@ -314,6 +333,10 @@ function boso_is_space(char) {
   }
 }
 
+/**
+ * 仮想文字か否か
+ * 仮想文字 (文字として単独で存在しえない文字 (にんべん、など))
+ */
 function boso_is_virtual(char) {
   if (typeof(char) == 'number' && char < 0) {
     return true;
@@ -327,7 +350,7 @@ function boso_is_virtual(char) {
  */
 function boso_step_redo() {
   var patch = board.diff_history.getCurrent();
-  if (! patch) {
+  if (! patch || patch.length <= 0) {
     var move = score.getNextMove();
     if (move) { // 解譜バッファに先がある場合
       boso_move(move, true); // 解譜のトレース
@@ -335,7 +358,7 @@ function boso_step_redo() {
     }
     return false; // 差分履歴にも解譜にもたどるものがない場合
   }
-  board.journey.unshift(patch[0].cell);
+  board.journey.unshift(patch[0].cell.cid);
   // board.update_step();
   score.progress();
   var flag = board.patch(patch);
@@ -349,7 +372,7 @@ function boso_step_redo() {
  */
 function boso_step_undo(cancel) {
   var patch = board.diff_history.getPrevious();
-  if (! patch) {
+  if (! patch || patch.length <= 0) {
     return false;
   }
   // boso_update_step(x - 1);
