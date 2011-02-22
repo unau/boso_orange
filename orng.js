@@ -272,6 +272,7 @@ function boso_move(direction, trace) {
   }
   var patch = new Array();
   if (boso_is_space(char1)) {
+    /*
     if (board.journey.in(cid1)) {
       board.journey.remove(cid1);
     }
@@ -280,12 +281,15 @@ function boso_move(direction, trace) {
       patch.push(boso_diff(cell0, char_mark, char_space),
                  boso_diff(cell1, char_space, char_mark));
     }
+    */
+    patch.push(boso_diff(cell0, char_mark, char_space),
+               boso_diff(cell1, char_space, char_mark));
   }
   else {
     cell0.setChar(char_space);
     var change = boso_move1(direction, cell1, cell2, char1, char2);
     if (change) {
-      board.journey.clear();
+      // board.journey.clear();
       patch.push(boso_diff(cell0, char_mark, char_space),
                  boso_diff(cell1, char1, char_mark));
       var i;
@@ -358,7 +362,7 @@ function boso_step_redo() {
     }
     return false; // 差分履歴にも解譜にもたどるものがない場合
   }
-  board.journey.unshift(patch[0].cell.cid);
+  // board.journey.unshift(patch[0].cell.cid);
   // board.update_step();
   score.progress();
   var flag = board.patch(patch);
@@ -379,7 +383,7 @@ function boso_step_undo(cancel) {
   board.patch(patch, true); // reverse patch
   board.diff_history.rewind();
   if (! cancel) {
-    board.journey.shift(); // 先頭を捨てる
+    // board.journey.shift(); // 先頭を捨てる
   }
   return true;
 }
