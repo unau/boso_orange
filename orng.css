@@ -1,0 +1,17 @@
+td.cell {
+  width: 20px;
+  height: 20px;
+  border: 1px;
+}
+
+td.block {
+  background-color: #cccccc;
+}
+
+td.wall {
+  background-color: #888888;
+}
+
+td.mark {
+  color: orange;
+}

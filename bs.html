@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+<script src="./boso_bsk_dic.js"></script>
+<script src="./orng.js"></script>
+<link rel="stylesheet" href="./orng.css" type="text/css" />
+<script>
+$(document).ready(function(){
+  pimo();
+  peso();
+})
+</script>
+</head>
+<body>
+
+<table id="scene"><tbody id="scene_inner"></tbody></table>
+<textarea id="scene_source"></textarea>
+<button id="go_button" onclick="peso()">kick</button>
+<table>
+ <tr> 
+  <td></td>
+  <td class="dir_button" onclick="boso_move(3)">↑</td>
+  <td></td>
+ </tr>
+ <tr> 
+  <td class="dir_button" onclick="boso_move(2)">←</td>
+  <td></td>
+  <td class="dir_button" onclick="boso_move(0)">→</td>
+ </tr>
+ <tr> 
+  <td></td>
+  <td class="dir_button" onclick="boso_move(1)">↓</td>
+  <td></td>
+ </tr>
+</table>
+</body>
