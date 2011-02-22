@@ -11,9 +11,9 @@ var initial_scene_source = "これはサンプル場面です。\n適当に書�
 
 var score = {
   getNextMove: function() {
-    return -1;
+    return false;
   },
-  promote: function() {
+  progress: function() {
     a = 1;
   },
   append: function() {
@@ -98,6 +98,9 @@ function form_board(tbody) {
       }
       this.buffer[this.index] = null;
     },
+    getCurrent: function() {
+      return this.buffer[this.index];
+    },
     getPrevious: function() {
       var prev_index = this.index - 1;
       if (prev_index < 0) {
@@ -109,6 +112,12 @@ function form_board(tbody) {
       this.index--;
       if (this.index < 0) {
         this.index = boso_diff_history_buffer_size - 1;
+      }
+    },
+    progress: function() {
+      this.index++;
+      if (this.index >= boso_diff_history_buffer_size) {
+        this.index = 0;
       }
     }
   };
@@ -245,7 +254,7 @@ function boso_move(direction, trace) {
   }
   var remove_flag = null;
   var patch = new Array();
-  if (char1 == char_space_fw || char1 == char_space_hw) {
+  if (boso_is_space(char1)) {
     // if (journey_list)
     if (remove_flag == null) {
       board.journey.unshift(cell0);
@@ -274,7 +283,7 @@ function boso_move(direction, trace) {
     board.patch(patch);
     board.diff_history.append(patch);
     if (trace) {
-      score.promote();
+      score.progress();
     }
     else {
       score.append(direction);
@@ -312,13 +321,36 @@ function boso_is_virtual(char) {
   return false;
 }
 
+/**
+ * ワンステップの redo
+ * boso_reundo() から呼ばれる
+ */
 function boso_step_redo() {
-  a = 1;
+  var patch = board.diff_history.getCurrent();
+  if (! patch) {
+    var move = score.getNextMove();
+    if (move) { // 解譜バッファに先がある場合
+      boso_move(move, true); // 解譜のトレース
+      return true;
+    }
+    return false; // 差分履歴にも解譜にもたどるものがない場合
+  }
+  board.journey.unshift(patch[0].cell);
+  // board.update_step();
+  score.progress();
+  var flag = board.patch(patch);
+  board.diff_history.progress();
+  return true;  
 }
+
+/**
+ * ワンステップの undo
+ * boso_reundo() から呼ばれる
+ */
 function boso_step_undo(cancel) {
   var patch = board.diff_history.getPrevious();
   if (! patch) {
-    return null;
+    return false;
   }
   // boso_update_step(x - 1);
   board.patch(patch, true); // reverse patch
@@ -326,7 +358,9 @@ function boso_step_undo(cancel) {
   if (! cancel) {
     board.journey.shift(); // 先頭を捨てる
   }
+  return true;
 }
+
 function boso_reundo(func, till_the_end) {
   var steps = 1;
   var loop = 0;
