@@ -104,13 +104,6 @@ function form_cell_line(tr) {
     var td = form_cell($('<td/>').appendTo(this).addClass('cell'));
     this.tds.push(td);
     td.setChar(ch);
-    /*
-    var mark = null;
-    if (ch == char_mark) {
-      mark = td;
-    }
-    return mark;
-    */
   };
   tr.addWall = function() {
     this.addTd(char_wall);
@@ -150,7 +143,6 @@ function peso() {
     }
   }
   board.addWallLine(max_length + 2);
-  //var mark = null;
   for (i in lines) {
     line = lines[i];
     tr = board.createCellLineTr();
@@ -160,12 +152,6 @@ function peso() {
     var j = 0;
     while (j < len) {
       tr.addTd(chs[j]);
-      /*
-      var a_mark = tr.addTd(chs[j]);
-      if (a_mark != null) {
-        mark = a_mark;
-      }
-      */
       j++;
     }
     while (j < max_length) {
@@ -177,7 +163,6 @@ function peso() {
   board.addWallLine(max_length + 2);
   board.connect(); // セル間の相互リンク
   // board.findMark();
-  // board.mark = mark;
 }
 
 function form_cell(td) {
