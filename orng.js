@@ -6,7 +6,7 @@ var char_space = char_space_hw;
 var char_mark = '＠';
 var char_refl = '＼';
 var char_refr = '／';
-
+var boso_diff_history_buffer_size = 1000;
 var initial_scene_source = "これはサンプル場面です。\n適当に書き替えてから kick してください。\n＠ 木寸";
 
 var score = {
@@ -41,6 +41,9 @@ function form_board(tbody) {
     },
     clear: function() {
       this.a = new Array();
+    },
+    shift: function() {
+      return this.a.shift();
     }
   };
   tbody.createCellLineTr = function() {
@@ -82,8 +85,32 @@ function form_board(tbody) {
       }
     }
   };
-  tbody.add_diff = function(patch) {
-    a = 1;
+  tbody.diff_history = {
+    init: function() {
+      this.buffer = new Array(boso_diff_history_buffer_size);
+      this.index = 0;
+    },
+    append: function(patch) {
+      this.buffer[this.index] = patch;
+      this.index++;
+      if (this.index >= boso_diff_history_buffer_size) {
+        this.index = 0;
+      }
+      this.buffer[this.index] = null;
+    },
+    getPrevious: function() {
+      var prev_index = this.index - 1;
+      if (prev_index < 0) {
+        prev_index = boso_diff_history_buffer_size - 1;
+      }
+      return this.buffer[prev_index];
+    },
+    rewind: function() {
+      this.index--;
+      if (this.index < 0) {
+        this.index = boso_diff_history_buffer_size - 1;
+      }
+    }
   };
   tbody.is_complete = function() {
     return false;
@@ -133,6 +160,7 @@ function pimo() {
 function peso() {
   var source = $('#scene_source').val();
   board.release();
+  board.diff_history.init();
   var lines = source.split("\n");
   var max_length = 0;
   var i;
@@ -244,7 +272,7 @@ function boso_move(direction, trace) {
   if (patch) {
     // boso_update_step();
     board.patch(patch);
-    board.add_diff(patch);
+    board.diff_history.append(patch);
     if (trace) {
       score.promote();
     }
@@ -282,6 +310,39 @@ function boso_is_virtual(char) {
     return true;
   }
   return false;
+}
+
+function boso_step_redo() {
+  a = 1;
+}
+function boso_step_undo(cancel) {
+  var patch = board.diff_history.getPrevious();
+  if (! patch) {
+    return null;
+  }
+  // boso_update_step(x - 1);
+  board.patch(patch, true); // reverse patch
+  board.diff_history.rewind();
+  if (! cancel) {
+    board.journey.shift(); // 先頭を捨てる
+  }
+}
+function boso_reundo(func, till_the_end) {
+  var steps = 1;
+  var loop = 0;
+  var flag = true;
+  while (flag) {
+    while (flag && loop < steps) {
+      flag = func();
+      loop++;
+    }
+    if (! till_the_end) {
+      flag = false;
+    }
+    if (flag) {
+      b = 1;
+    }
+  }
 }
 
 function boso_rule_table(char1, char2, direction) {
@@ -348,6 +409,6 @@ function boso_move1(direction, cell1, cell2, char1, char2) {
   }
   change.unshift(boso_diff(cell2, char2, curr['a']));
   return change;
-  a = 1;
 }
+
 // end of file
